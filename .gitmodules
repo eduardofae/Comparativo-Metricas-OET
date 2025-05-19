@@ -1,0 +1,6 @@
+[submodule "emnlp19-moverscore"]
+	path = external/moverscore
+	url = https://github.com/AIPHES/emnlp19-moverscore.git
+[submodule "SUPERT"]
+	path = external/SUPERT
+	url = https://github.com/danieldeutsch/SUPERT.git
