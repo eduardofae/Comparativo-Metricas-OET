@@ -46,9 +46,6 @@ setuptools==70.2.0
 six==1.17.0
 sympy==1.13.3
 tokenizers==0.21.1
-torch==2.7.0+cu126
-torchaudio==2.7.0+cu126
-torchvision==0.22.0+cu126
 tqdm==4.67.1
 transformers==4.51.3
 typing_extensions==4.13.2
