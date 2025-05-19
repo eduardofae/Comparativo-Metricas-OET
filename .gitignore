@@ -4,3 +4,7 @@ __pycache__/
 
 # Results
 *.json
+
+# Generated Bat Files
+activate.bat
+run.bat
