@@ -8,7 +8,7 @@ call:create_exec
 (
     echo @echo off
     echo call activate 
-    echo python run.py
+    echo python src\run.py
 ) > run.bat
 exit /b
 
@@ -34,8 +34,8 @@ call:fix_moverscore
 exit /b
 
 :fix_moverscore
-set "source=external\moverscore\moverscore_v2.py"
-set "temp=external\moverscore\moverscore_v2.temp"
+set "source=src\external\moverscore\moverscore_v2.py"
+set "temp=src\external\moverscore\moverscore_v2.temp"
 rename %source% "moverscore_v2.temp"
 setlocal enableDelayedExpansion
 (
