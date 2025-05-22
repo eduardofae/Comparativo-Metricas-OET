@@ -4,3 +4,6 @@
 [submodule "external/SUPERT"]
 	path = external/SUPERT
 	url = https://github.com/danieldeutsch/SUPERT.git
+[submodule "external/BARTScore"]
+	path = external/BARTScore
+	url = https://github.com/neulab/BARTScore.git
