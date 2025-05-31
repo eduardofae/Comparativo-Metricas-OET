@@ -41,6 +41,7 @@ pytz==2025.2
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
+rouge==1.0.1
 safetensors==0.5.3
 setuptools==70.2.0
 six==1.17.0
