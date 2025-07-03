@@ -4,7 +4,12 @@ __pycache__/
 
 # Results
 *.json
+*.txt
+*.csv
 
 # Generated Bat Files
 activate.bat
 run.bat
+
+# Hugging Face Token
+confidential.py

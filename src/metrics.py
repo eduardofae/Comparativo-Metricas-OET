@@ -3,55 +3,82 @@ from rouge import Rouge
 from external.moverscore.moverscore_v2 import word_mover_score
 from collections import defaultdict
 from external.BARTScore.bart_score import BARTScorer
+from math import log, exp
+from tqdm import tqdm
 
+def calc_n_bleu(precisions, bp):
+    sum = 0
+    for p in precisions:
+        if p == 0: return 0
+        sum += log(p)
+    sum /= len(precisions)
+    return bp * exp(sum)
 
-def add_bleu(prediction, reference, data):
+metrics = {
+    'bleu': evaluate.load('bleu'),
+    'meteor': evaluate.load('meteor'),
+    'rouge': Rouge(),
+    'bertscore': evaluate.load('bertscore'),
+    'bartscore': BARTScorer()
+}
+
+def add_bleu(prediction, reference, results):
     metric_name = 'bleu'
-    metric = evaluate.load(metric_name)
-    results = metric.compute(predictions=[prediction], references=[reference])
-    data[reference][metric_name] = results[metric_name]
+    metric = metrics[metric_name]
+    values = metric.compute(predictions=[prediction], references=[reference])
+    results[metric_name] = values[metric_name]
+    results[metric_name+'-1'] = calc_n_bleu(values['precisions'][:1], values['brevity_penalty'])
+    results[metric_name+'-2'] = calc_n_bleu(values['precisions'][:2], values['brevity_penalty'])
 
-def add_meteor(prediction, reference, data):
+def add_meteor(prediction, reference, results):
     metric_name = 'meteor'
-    metric = evaluate.load(metric_name)
-    results = metric.compute(predictions=[prediction], references=[reference])
-    data[reference][metric_name] = results[metric_name]
+    metric = metrics[metric_name]
+    values = metric.compute(predictions=[prediction], references=[reference])
+    results[metric_name] = values[metric_name]
 
-def add_rouge(prediction, reference, data):
+def add_rouge(prediction, reference, results):
     metric_name = 'rouge'
-    metric = Rouge()
-    results = metric.get_scores(hyps=prediction, refs=reference)
-    data[reference][metric_name+'-1'] = results[0][metric_name+'-1']['f']
-    data[reference][metric_name+'-2'] = results[0][metric_name+'-2']['f']
-    data[reference][metric_name+'-l'] = results[0][metric_name+'-l']['f']
+    metric = metrics[metric_name]
+    values = metric.get_scores(hyps=prediction, refs=reference)[0]
+    results[metric_name+'-1'] = values[metric_name+'-1']['f']
+    results[metric_name+'-2'] = values[metric_name+'-2']['f']
+    results[metric_name+'-l'] = values[metric_name+'-l']['f']
 
-def add_bertscore(prediction, reference, data, lang):
+def add_bertscore(prediction, reference, results):
     metric_name = 'bertscore'
-    metric = evaluate.load(metric_name)
-    results = metric.compute(predictions=[prediction], references=[reference], lang=lang)
-    data[reference][metric_name+'-p']  = results['precision'][0]
-    data[reference][metric_name+'-r']  = results['recall'][0]
-    data[reference][metric_name+'-f1'] = results['f1'][0]
+    metric = metrics[metric_name]
+    values = metric.compute(predictions=[prediction], references=[reference], lang='pt')
+    results[metric_name+'-p']  = values['precision'][0]
+    results[metric_name+'-r']  = values['recall'][0]
+    results[metric_name+'-f1'] = values['f1'][0]
 
-def add_moverscore(prediction, reference, data):
+def add_moverscore(prediction, reference, results):
     metric_name = 'moverscore'
     idf_dict_hyp = defaultdict(lambda: 1.)
     idf_dict_ref = defaultdict(lambda: 1.)
-    results = word_mover_score([reference], [prediction], idf_dict_ref, idf_dict_hyp, stop_words=[], n_gram=1, remove_subwords=False)
-    data[reference][metric_name] = results[0]
+    values = word_mover_score([reference], [prediction], idf_dict_ref, idf_dict_hyp, stop_words=[], n_gram=1, remove_subwords=False)
+    results[metric_name] = values[0]
 
-def add_bartscore(prediction, reference, data):
+def add_bartscore(prediction, reference, results):
     metric_name = 'bartscore'
-    bart_scorer = BARTScorer(device='cuda:0', checkpoint='facebook/bart-large-cnn')
-    results = bart_scorer.score([prediction], [reference], batch_size=4)
-    data[reference][metric_name] = results[0]
+    metric = metrics[metric_name]
+    precision = metric.score([reference], [prediction])[0]
+    recall = metric.score([prediction], [reference])[0]
+    results[metric_name] = (precision+recall)/2
 
-def add_metrics(prediction, reference, data, lang='en'):
-    add_bleu(prediction, reference, data)
-    add_rouge(prediction, reference, data)
-    add_meteor(prediction, reference, data)
-    add_bertscore(prediction, reference, data, lang)
-    add_moverscore(prediction, reference, data)
-    add_bartscore(prediction, reference, data)
+def add_metrics(prediction, reference, task):
+    results = {}
+    add_bleu(prediction, reference, results)
+    add_rouge(prediction, reference, results)
+    add_meteor(prediction, reference, results)
+    add_bertscore(prediction, reference, results)
+    add_moverscore(prediction, reference, results)
+    add_bartscore(prediction, reference, results)
+    task['metrics'] = results
 
-
+def eval_data(data, data_type):
+    results = data.copy()
+    print(f'Starting {data_type} Evaluations!')
+    for task in tqdm(results.values()):
+        add_metrics(task['generated'], task['reference'], task)
+    return results
