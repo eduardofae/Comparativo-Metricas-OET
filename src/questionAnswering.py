@@ -1,19 +1,15 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, logging, T5ForConditionalGeneration, ByT5Tokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from confidential import TOKEN
 from random import sample
 
 
 model_name = "google/gemma-3-1b-it"
-# tokenizer = ByT5Tokenizer.from_pretrained(model_name)
-# model = T5ForConditionalGeneration.from_pretrained(model_name)
-
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto")
 
 model_pt = pipeline("text-generation", model=model, tokenizer=tokenizer)
 
 INSTRUCTIONS="<start_of_turn>system\nDado o contexto abaixo, responda a pergunta solicitada. Retorne apenas a resposta.<end_of_turn>\n"
-# INSTRUCTIONS="User: Dado o contexto abaixo, responda a pergunta solicitada. Retorne apenas a resposta.\n"
 
 def gen_answer(question, context):
     return model_pt(f"{INSTRUCTIONS}<start_of_turn>user\nContexto: {context}\nPergunta: {question}\n<end_of_turn>\n<start_of_turn>model\n", max_new_tokens=100)[0]['generated_text'].split('<start_of_turn>model\n')[1]
