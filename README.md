@@ -1,32 +1,30 @@
-# TCC
+# Comparativo de Métricas Intrínsecas para Avaliação do Desempenho de Modelos em Open-Ended Tasks
 
 Métricas candidatas:
 - [ ] Extrinsic Evaluation:
 	- SummaQA, FEQA, FactCC, BLANC, QuestEval, QAFactEval, CTRLEval.
 - [X] Intrinsic Evaluation:
-	- 𝑆3, ROUGE-G, SUPERT, BARTScore, SummScore, SDC*, Shannon, SPEED, SEM-nCG, ENMS.
-
-Métricas Descartadas:
-- GM, VE, ROUGE-WE, SMS, SLN-based.
+	- BLEU, ROUGE, METEOR, BERTScore, BARTScore, MoverScore, GM, VE, ROUGE-WE, SMS, SLN-based, ROUGE-SEM, ROUGE 2.0, S3.
 
 Métricas Escolhidas:
-- BLEU, ROUGE, METEOR, BERTScore, ROUGE-SEM, MoverScore, ROUGE 2.0.
+- BLEU, ROUGE, METEOR, BERTScore, MoverScore, BARTScore.
 
 Artigos para LER:
 - [X] BLEU
 - [X] ROUGE
-- [ ] METEOR
+- [X] METEOR
 - [X] BERTScore
-- [ ] ROUGE-SEM
-- [ ] MoverScore
-- [X] ROUGE 2.0
+- [X] MoverScore
+- [X] BARTScore
 
 Métricas para implementar:
-- [ ] BLEU
-- [ ] ROUGE-N
-- [ ] ROUGE-L
-- [ ] METEOR
-- [ ] BERTScore
-- [ ] ROUGE-SEM
-- [ ] MoverScore
-- [ ] ROUGE 2.0
+- [X] BLEU
+- [X] BLEU-1
+- [X] BLEU-2
+- [X] ROUGE-1
+- [X] ROUGE-2
+- [X] ROUGE-L
+- [X] METEOR
+- [X] BERTScore
+- [X] MoverScore
+- [X] BARTScore

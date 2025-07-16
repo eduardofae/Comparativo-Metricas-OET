@@ -1,7 +1,8 @@
 from scipy.stats import pearsonr
 from dataHandler import read_data, write_data
+from statistics import stdev
 
-def get_human_evals(path, padding=2):
+def get_human_evals(path, padding=1):
     with open(path, 'r', encoding='utf-8') as file:
         results = {
             'Consistência': [],
@@ -9,11 +10,12 @@ def get_human_evals(path, padding=2):
             'Relevância': [],
             'Coerência': []
         }
-        i = 0
+        lin_num = 0
         for line in file:
-            i += 1
+            if lin_num < padding: 
+                lin_num += 1
+                continue
             cols = line.split('\n')[0].split(',')[2:]
-            if i < padding: continue
             for i, col in enumerate(cols):
                 eval_type = list(results.keys())[i%4]
                 if i//4 >= len(results[eval_type]):
@@ -34,29 +36,41 @@ def get_metrics(path):
             metrics[key].append(mtrcs[key])
     return metrics
 
+def get_correlations(path):
+    metrics = get_metrics(f'{path}/group.json')
+    human_evals = get_human_evals(f'{path}/human_evals.csv')
+    return {
+        metric: { 
+            eval_type: pearsonr(values, [val['avg'] for val in human_eval]) 
+            for eval_type, human_eval in human_evals.items() 
+        } 
+        for metric, values in metrics.items()
+    }
+
+def get_metrics_avg(path):
+    metrics = get_metrics(f'{path}/group.json')
+    for k, v in metrics.items():
+        metrics[k] = sum(v) / len(v)
+    return metrics
+
+def get_human_avgs(path):
+    human_evals = get_human_evals(f'{path}/human_evals.csv')
+    for k, val in human_evals.items():
+        val_ = [v['avg'] for v in val]
+        human_evals[k] = sum(val_) / len(val_)
+    return human_evals
+
+def get_human_stdevs(path):
+    human_evals = get_human_evals(f'{path}/human_evals.csv')
+    for k, val in human_evals.items():
+        for i, v in enumerate(val):
+            val[i] = stdev(v['scores'])
+        human_evals[k] = sum(val) / len(val)
+    return human_evals
+
+
 RESULTS_PATH = 'outputs/qa/FairytaleQA-translated-ptBR/gemma-3-1b-it'
-# Save Correlations
-metrics = get_metrics(f'{RESULTS_PATH}/group.json')
-human_evals = get_human_evals(f'{RESULTS_PATH}/human_evals.csv')
-results = {metric: { eval_type: pearsonr(values, [val['avg'] for val in human_eval])[0] for eval_type, human_eval in human_evals.items() } for metric, values in metrics.items()}
-write_data(results, f'{RESULTS_PATH}/correlations.json')
-
-# Save Metrics AVG
-for k, v in metrics.items():
-    metrics[k] = sum(v) / len(v)
-write_data(metrics, f'{RESULTS_PATH}/metrics-avg.json')
-
-# Save Human Evaluation AVG
-for k, val in human_evals.items():
-    val_ = [v['avg'] for v in val]
-    human_evals[k] = sum(val_) / len(val_)
-write_data(human_evals, f'{RESULTS_PATH}/human-avgs.json')
-
-# Save Human Evaluation STDEV
-from statistics import stdev
-dp = get_human_evals(f'{RESULTS_PATH}/human_evals.csv')
-for k, val in dp.items():
-    for i, v in enumerate(val):
-        val[i] = stdev(v['scores'])
-    dp[k] = sum(val) / len(val)
-write_data(dp, f'{RESULTS_PATH}/human-stdevs.json')
+write_data(get_correlations(RESULTS_PATH), f'{RESULTS_PATH}/correlations.json')
+write_data(get_metrics_avg(RESULTS_PATH) , f'{RESULTS_PATH}/metrics-avg.json' )
+write_data(get_human_avgs(RESULTS_PATH)  , f'{RESULTS_PATH}/human-avgs.json'  )
+write_data(get_human_stdevs(RESULTS_PATH), f'{RESULTS_PATH}/human-stdevs.json')

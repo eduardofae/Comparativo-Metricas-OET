@@ -1,7 +1,4 @@
-# Tokenizer 
 from transformers import T5Tokenizer
-
-# PyTorch model 
 from transformers import T5ForConditionalGeneration
 
 token_name = 'unicamp-dl/ptt5-base-portuguese-vocab'
